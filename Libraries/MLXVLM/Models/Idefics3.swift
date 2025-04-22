@@ -566,6 +566,8 @@ private enum Vision {
             print(posEmbedding.shape)
             let embeddings = patchEmbeddings + posEmbedding
             print("after concatting embeddings")
+            print("embeddings = patchEmbeddings + posEmbedding:")
+            print(embeddings.shape)
             return embeddings
         }
     }
