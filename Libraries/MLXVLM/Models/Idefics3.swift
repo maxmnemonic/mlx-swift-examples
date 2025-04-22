@@ -559,7 +559,9 @@ private enum Vision {
             patchEmbeddings = patchEmbeddings.flattened(start: 1, end: 2)
             let positionIds = MLXArray(0 ..< numPositions)[.newAxis, 0...]
             let posEmbedding = positionEmbedding(positionIds)
+            print("before concatting embeddings")
             let embeddings = patchEmbeddings + posEmbedding
+            print("after concatting embeddings")
             return embeddings
         }
     }
@@ -807,7 +809,7 @@ public class Idefics3Processor: UserInputProcessor {
 
     // From the Python code and default config, we know image_token_id is usually 49153.
     // Hardcode this since we can't pass it in or rely on it from the processor config.
-    private let imageTokenId = 49153
+    private let imageTokenId = 49190
 
     public init(
         _ config: Idefics3ProcessorConfiguration,
