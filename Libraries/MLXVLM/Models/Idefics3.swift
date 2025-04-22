@@ -560,6 +560,10 @@ private enum Vision {
             let positionIds = MLXArray(0 ..< numPositions)[.newAxis, 0...]
             let posEmbedding = positionEmbedding(positionIds)
             print("before concatting embeddings")
+            print("patchEmbeddings shape:")
+            print(patchEmbeddings.shape)
+            print("posEmbedding shape:")
+            print(posEmbedding.shape)
             let embeddings = patchEmbeddings + posEmbedding
             print("after concatting embeddings")
             return embeddings
