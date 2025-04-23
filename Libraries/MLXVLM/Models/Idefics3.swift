@@ -545,11 +545,14 @@ private enum Vision {
                 kernelSize: .init(config.patchSize),
                 stride: .init(config.patchSize)
             )
+            let cFixedImageSize = 384
             let numPatches =
-                (config.imageSize / config.patchSize) * (config.imageSize / config.patchSize)
+                (cFixedImageSize / config.patchSize) * (cFixedImageSize / config.patchSize)
             print("*")
             print("config.imageSize:")
             print(config.imageSize)
+            print("config.cFixedImageSize:")
+            print(cFixedImageSize)
             print("config.patchSize:")
             print(config.patchSize)
             print("numPatches:")
@@ -601,7 +604,7 @@ private enum Vision {
 
         init(_ config: Idefics3Configuration.VisionConfiguration) {
             self.config = config
-            config.imageSize = 384
+            // config.imageSize = 384
             self._embeddings.wrappedValue = VisionEmbeddings(config)
             self._encoder.wrappedValue = Encoder(config)
             self._postLayernorm.wrappedValue = LayerNorm(
