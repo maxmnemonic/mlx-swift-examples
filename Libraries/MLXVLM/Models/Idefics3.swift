@@ -545,6 +545,7 @@ private enum Vision {
                 kernelSize: .init(config.patchSize),
                 stride: .init(config.patchSize)
             )
+            config.imageSize = 384
             let numPatches =
                 (config.imageSize / config.patchSize) * (config.imageSize / config.patchSize)
             print("*")
