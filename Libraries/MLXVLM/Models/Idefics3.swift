@@ -547,6 +547,14 @@ private enum Vision {
             )
             let numPatches =
                 (config.imageSize / config.patchSize) * (config.imageSize / config.patchSize)
+            print("*")
+            print("config.imageSize:")
+            print(config.imageSize)
+            print("config.patchSize:")
+            print(config.patchSize)
+            print("numPatches:")
+            print(numPatches)
+            print("*")
             self.numPositions = numPatches
             self._positionEmbedding.wrappedValue = Embedding(
                 embeddingCount: numPatches,
@@ -558,6 +566,10 @@ private enum Vision {
             var patchEmbeddings = patchEmbedding(x)
             patchEmbeddings = patchEmbeddings.flattened(start: 1, end: 2)
             let positionIds = MLXArray(0 ..< numPositions)[.newAxis, 0...]
+            print("positionIds:")
+            print(len(positionIds))
+            print(positionIds)
+    
             let posEmbedding = positionEmbedding(positionIds)
             print("before concatting embeddings")
             print("patchEmbeddings shape:")
