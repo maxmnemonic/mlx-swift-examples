@@ -57,7 +57,7 @@ public struct Idefics3Configuration: Codable, Sendable {
         public var intermediateSize: Int { _intermediateSize ?? 3072 }
         public let numAttentionHeads: Int
         public let patchSize: Int
-        public let imageSize: Int
+        public var imageSize: Int
         public var numChannels: Int { _numChannels ?? 3 }
         public var layerNormEps: Float { _layerNormEps ?? 1e-6 }
 
