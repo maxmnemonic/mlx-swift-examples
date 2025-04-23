@@ -309,7 +309,7 @@ private enum Language {
         @ModuleInfo(key: "embed_tokens") var embedTokens: Embedding
         var layers: [TransformerBlock]
         let norm: RMSNorm
-        let config: Idefics3Configuration.TextConfiguration
+        var config: Idefics3Configuration.TextConfiguration
         @ModuleInfo(key: "lm_head") var lmHead: Linear?
 
         var kvHeads: [Int] {
@@ -545,7 +545,6 @@ private enum Vision {
                 kernelSize: .init(config.patchSize),
                 stride: .init(config.patchSize)
             )
-            config.imageSize = 384
             let numPatches =
                 (config.imageSize / config.patchSize) * (config.imageSize / config.patchSize)
             print("*")
@@ -598,10 +597,11 @@ private enum Vision {
         @ModuleInfo(key: "embeddings") var embeddings: VisionEmbeddings
         @ModuleInfo(key: "encoder") var encoder: Encoder
         @ModuleInfo(key: "post_layernorm") var postLayernorm: LayerNorm
-        let config: Idefics3Configuration.VisionConfiguration
+        var config: Idefics3Configuration.VisionConfiguration
 
         init(_ config: Idefics3Configuration.VisionConfiguration) {
             self.config = config
+            config.imageSize = 384
             self._embeddings.wrappedValue = VisionEmbeddings(config)
             self._encoder.wrappedValue = Encoder(config)
             self._postLayernorm.wrappedValue = LayerNorm(
@@ -652,7 +652,7 @@ public class Idefics3: Module, VLMModel, KVCacheDimensionProvider {
         key: "language_model"
     ) private var languageModel: Language.LanguageModel
     @ModuleInfo(key: "connector") private var connector: Idefics3Connector
-    public let config: Idefics3Configuration
+    public var config: Idefics3Configuration
 
     public var vocabularySize: Int { config.vocabSize }
     public var kvHeads: [Int] { languageModel.kvHeads }
@@ -831,7 +831,7 @@ public struct Idefics3ProcessorConfiguration: Codable, Sendable {
 // MARK: - Processor
 
 public class Idefics3Processor: UserInputProcessor {
-    private let config: Idefics3ProcessorConfiguration
+    private var config: Idefics3ProcessorConfiguration
     private let tokenizer: any Tokenizer
     private let fixedImageSize = 384
 
