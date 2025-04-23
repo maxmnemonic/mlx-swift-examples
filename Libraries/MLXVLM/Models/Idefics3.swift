@@ -567,7 +567,7 @@ private enum Vision {
             patchEmbeddings = patchEmbeddings.flattened(start: 1, end: 2)
             let positionIds = MLXArray(0 ..< numPositions)[.newAxis, 0...]
             print("positionIds:")
-            print(len(positionIds))
+            print(positionIds.shape)
             print(positionIds)
     
             let posEmbedding = positionEmbedding(positionIds)
