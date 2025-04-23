@@ -563,7 +563,11 @@ private enum Vision {
         }
 
         func callAsFunction(_ x: MLXArray) -> MLXArray {
+            print("x shape:")
+            print(x.shape)
             var patchEmbeddings = patchEmbedding(x)
+            print("patchEmbeddings pre-flattened shape:")
+            print(patchEmbeddings.shape)
             patchEmbeddings = patchEmbeddings.flattened(start: 1, end: 2)
             let positionIds = MLXArray(0 ..< numPositions)[.newAxis, 0...]
             print("positionIds:")
