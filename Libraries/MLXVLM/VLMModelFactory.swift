@@ -145,10 +145,16 @@ public class VLMRegistry: AbstractModelRegistry, @unchecked Sendable {
         defaultPrompt: "Describe the image in English"
     )
 
+    // static public let smolvlm = ModelConfiguration(
+    //     id: "HuggingFaceTB/SmolVLM2-500M-Video-Instruct-mlx",
+    //     defaultPrompt:
+    //         "What is the main action or notable event happening in this segment? Describe it in one brief sentence."
+    // )
+
     static public let smolvlm = ModelConfiguration(
-        id: "HuggingFaceTB/SmolVLM2-500M-Video-Instruct-mlx",
+        id: "ds4sd/SmolDocling-256M-preview-mlx-bf16",
         defaultPrompt:
-            "What is the main action or notable event happening in this segment? Describe it in one brief sentence."
+            "Convert this page to docling."
     )
 
     static public func all() -> [ModelConfiguration] {
@@ -158,6 +164,7 @@ public class VLMRegistry: AbstractModelRegistry, @unchecked Sendable {
             qwen2_5VL3BInstruct4Bit,
             smolvlminstruct4bit,
             smolvlm,
+            // smolvlm,
         ]
     }
 
