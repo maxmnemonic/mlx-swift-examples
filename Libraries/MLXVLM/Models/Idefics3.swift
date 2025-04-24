@@ -848,6 +848,7 @@ public class Idefics3Processor: UserInputProcessor {
         _ config: Idefics3ProcessorConfiguration,
         tokenizer: any Tokenizer
     ) {
+        print("Idefics3 INIT")
         self.config = config
         self.tokenizer = tokenizer
     }
