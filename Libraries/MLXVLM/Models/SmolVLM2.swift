@@ -43,7 +43,7 @@ public struct SmolVLMProcessorConfiguration: Codable, Sendable {
     public let imageStd: [CGFloat]
     public let size: Size
     public let maxImageSize: Size
-    public let videoSampling: VideoSampling
+    // public let videoSampling: VideoSampling
     private let _imageSequenceLength: Int?
     // TODO: this does not come in preprocessor_config.json, verify where transformers gets it from
     public var imageSequenceLength: Int { _imageSequenceLength ?? 64 }
@@ -56,7 +56,7 @@ public struct SmolVLMProcessorConfiguration: Codable, Sendable {
         self.imageStd = imageStd
         self.size = size
         self.maxImageSize = maxImageSize
-        self.videoSampling = videoSampling
+        // self.videoSampling = videoSampling
         self._imageSequenceLength = imageSequenceLength
     }
 
@@ -72,7 +72,7 @@ public struct SmolVLMProcessorConfiguration: Codable, Sendable {
         case imageStd = "image_std"
         case size
         case maxImageSize = "max_image_size"
-        case videoSampling = "video_sampling"
+        // case videoSampling = "video_sampling"
         case _imageSequenceLength = "image_seq_len"
     }
 }
@@ -92,7 +92,7 @@ public class SmolVLMProcessor: UserInputProcessor {
     var fixedImageSize: CGFloat { CGFloat(config.maxImageSize.longestEdge) }  // 384 for big models, 512 for small models (200-500M)
     var imageSequenceLength: Int { config.imageSequenceLength }
     var maxVideoFrames: Int { 20 /*config.videoSampling.maxFrames*/ }
-    var targetVideoFPS: Double { Double(config.videoSampling.fps) }
+    var targetVideoFPS: Double { Double(24/*config.videoSampling.fps*/) }
 
     let defaultVideoSystemMessage =
         "You are a helpful assistant that can understand videos. Describe what type of video this is and what's happening in it."
