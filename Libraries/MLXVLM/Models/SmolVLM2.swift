@@ -101,7 +101,7 @@ public class SmolVLMProcessor: UserInputProcessor {
         _ config: SmolVLMProcessorConfiguration,
         tokenizer: any Tokenizer
     ) {
-        print("SmolVLM2 INIT")
+        print("SmolVLMProcessor INIT")
         self.config = config
         self.tokenizer = tokenizer
     }

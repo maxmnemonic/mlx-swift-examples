@@ -710,6 +710,7 @@ public class Idefics3: Module, VLMModel, KVCacheDimensionProvider {
     private func prepareInputsForMultimodal(
         imageFeatures: MLXArray, inputs_embeds: MLXArray, inputIds: MLXArray
     ) -> MLXArray {
+        print("Idefics3, prepareInputsForMultimodal...")
         // Assumes bs == 1
         // inputIds shape: (1, seq_len)
         // asArray(Int.self) -> [[Int]], take [0] to get [Int]
@@ -848,22 +849,24 @@ public class Idefics3Processor: UserInputProcessor {
         _ config: Idefics3ProcessorConfiguration,
         tokenizer: any Tokenizer
     ) {
-        print("Idefics3 INIT")
+        print("Idefics3Processor INIT")
         self.config = config
         self.tokenizer = tokenizer
     }
 
     public func prepare(input: UserInput) throws -> LMInput {
-
+        print("Idefics3Processor prepare...")
         let prompt = input.prompt.asMessages().last?["content"] as? String ?? ""
 
         if input.images.isEmpty {
+            print("Idefics3Processor NO IMAGE...")
             // No image scenario
             let tokens = try tokenizer.encode(text: prompt)
             let tokensArray = MLXArray(tokens).expandedDimensions(axis: 0)
             let mask = ones(like: tokensArray)
             return LMInput(text: .init(tokens: tokensArray, mask: mask), image: nil)
         } else {
+            print("Idefics3Processor SINGLE IMAGE...")
             // Single image scenario
             guard input.images.count == 1 else {
                 throw VLMError.singleImageAllowed
