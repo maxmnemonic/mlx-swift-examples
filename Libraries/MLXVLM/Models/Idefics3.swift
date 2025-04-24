@@ -545,7 +545,8 @@ private enum Vision {
                 kernelSize: .init(config.patchSize),
                 stride: .init(config.patchSize)
             )
-            let cFixedImageSize = 384
+            // let cFixedImageSize = 384
+            let cFixedImageSize = config.imageSize
             let numPatches =
                 (cFixedImageSize / config.patchSize) * (cFixedImageSize / config.patchSize)
             print("*")
@@ -836,7 +837,8 @@ public struct Idefics3ProcessorConfiguration: Codable, Sendable {
 public class Idefics3Processor: UserInputProcessor {
     private var config: Idefics3ProcessorConfiguration
     private let tokenizer: any Tokenizer
-    private let fixedImageSize = 384
+    // private let fixedImageSize = 384
+    private let fixedImageSize = 512
 
     // From the Python code and default config, we know image_token_id is usually 49153.
     // Hardcode this since we can't pass it in or rely on it from the processor config.
