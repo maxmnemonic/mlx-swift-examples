@@ -106,8 +106,10 @@ public class VLMProcessorTypeRegistry: ProcessorTypeRegistry, @unchecked Sendabl
                 Qwen2VLProcessorConfiguration.self, Qwen2VLProcessor.init),
             "Qwen2_5_VLProcessor": create(
                 Qwen25VLProcessorConfiguration.self, Qwen25VLProcessor.init),
+            // "Idefics3Processor": create(
+            //     Idefics3ProcessorConfiguration.self, Idefics3Processor.init),
             "Idefics3Processor": create(
-                Idefics3ProcessorConfiguration.self, Idefics3Processor.init),
+                SmolVLMProcessorConfiguration.self, SmolVLMProcessor.init),
             "SmolVLMProcessor": create(
                 SmolVLMProcessorConfiguration.self, SmolVLMProcessor.init),
         ]
