@@ -106,8 +106,10 @@ public class VLMProcessorTypeRegistry: ProcessorTypeRegistry, @unchecked Sendabl
                 Qwen2VLProcessorConfiguration.self, Qwen2VLProcessor.init),
             "Qwen2_5_VLProcessor": create(
                 Qwen25VLProcessorConfiguration.self, Qwen25VLProcessor.init),
+            // ORIGINAL Idefics3Processor
             // "Idefics3Processor": create(
             //     Idefics3ProcessorConfiguration.self, Idefics3Processor.init),
+            // KEY DEFINED IN TOKENIZER JSON
             "Idefics3Processor": create(
                 SmolVLMProcessorConfiguration.self, SmolVLMProcessor.init),
             "SmolVLMProcessor": create(
@@ -153,6 +155,7 @@ public class VLMRegistry: AbstractModelRegistry, @unchecked Sendable {
     //         "What is the main action or notable event happening in this segment? Describe it in one brief sentence."
     // )
 
+    // TODO: Create our own SmolDocling model configuration, instead of overwriting smolvlm configuration
     static public let smolvlm = ModelConfiguration(
         id: "ds4sd/SmolDocling-256M-preview-mlx-bf16",
         defaultPrompt:
@@ -166,7 +169,7 @@ public class VLMRegistry: AbstractModelRegistry, @unchecked Sendable {
             qwen2_5VL3BInstruct4Bit,
             smolvlminstruct4bit,
             smolvlm,
-            // smolvlm,
+            // TODO: ADD smoldocling
         ]
     }
 

@@ -101,7 +101,6 @@ public class SmolVLMProcessor: UserInputProcessor {
         _ config: SmolVLMProcessorConfiguration,
         tokenizer: any Tokenizer
     ) {
-        print("SmolVLMProcessor INIT")
         self.config = config
         self.tokenizer = tokenizer
     }
@@ -110,7 +109,6 @@ public class SmolVLMProcessor: UserInputProcessor {
         frameCount: Int, timeStamps: [String], videoDuration: String, seqLen: Int,
         fakeToken: String, imageToken: String, globalImageToken: String
     ) -> String {
-        print("Inside SmolVLM2 getVideoPromptString...")
         var textSplitFrames =
             "You are provided the following series of \(frameCount) frames from a \(videoDuration) [H:MM:SS] video.\n"
         for frameIndex in 0 ..< frameCount {
@@ -132,7 +130,6 @@ public class SmolVLMProcessor: UserInputProcessor {
         /// Prompt with expanded image tokens for when the image is split into patches.
         /// This applies to image processing, not video (I think).
         /// This just transliterates this: https://github.com/huggingface/transformers/blob/6a1ab634b6886b6560b0502e7a305c8cd881732e/src/transformers/models/idefics3/processing_idefics3.py#L44
-        print("Inside SmolVLM2 getImagePromptString...")
         var textSplitImages = ""
         for h in 0 ..< rows {
             for w in 0 ..< cols {
@@ -223,7 +220,6 @@ public class SmolVLMProcessor: UserInputProcessor {
     }
 
     public func prepare(input: UserInput) async throws -> LMInput {
-        print("Inside SmolVLM2 prepare...")
         let messages = input.prompt.asMessages()
 
         if input.images.isEmpty && input.videos.isEmpty {

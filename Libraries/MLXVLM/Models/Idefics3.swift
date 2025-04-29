@@ -57,7 +57,7 @@ public struct Idefics3Configuration: Codable, Sendable {
         public var intermediateSize: Int { _intermediateSize ?? 3072 }
         public let numAttentionHeads: Int
         public let patchSize: Int
-        public var imageSize: Int
+        public let imageSize: Int
         public var numChannels: Int { _numChannels ?? 3 }
         public var layerNormEps: Float { _layerNormEps ?? 1e-6 }
 
@@ -309,7 +309,7 @@ private enum Language {
         @ModuleInfo(key: "embed_tokens") var embedTokens: Embedding
         var layers: [TransformerBlock]
         let norm: RMSNorm
-        var config: Idefics3Configuration.TextConfiguration
+        let config: Idefics3Configuration.TextConfiguration
         @ModuleInfo(key: "lm_head") var lmHead: Linear?
 
         var kvHeads: [Int] {
@@ -545,20 +545,8 @@ private enum Vision {
                 kernelSize: .init(config.patchSize),
                 stride: .init(config.patchSize)
             )
-            // let cFixedImageSize = 384
-            let cFixedImageSize = config.imageSize
             let numPatches =
-                (cFixedImageSize / config.patchSize) * (cFixedImageSize / config.patchSize)
-            print("Idefics3Configuration.VisionConfiguration INIT...")
-            // print("config.imageSize:")
-            // print(config.imageSize)
-            // print("config.cFixedImageSize:")
-            // print(cFixedImageSize)
-            // print("config.patchSize:")
-            // print(config.patchSize)
-            // print("numPatches:")
-            // print(numPatches)
-            // print("*")
+                (config.imageSize / config.patchSize) * (config.imageSize / config.patchSize)
             self.numPositions = numPatches
             self._positionEmbedding.wrappedValue = Embedding(
                 embeddingCount: numPatches,
@@ -567,32 +555,11 @@ private enum Vision {
         }
 
         func callAsFunction(_ x: MLXArray) -> MLXArray {
-            // print("x shape:")
-            // print(x.shape)
             var patchEmbeddings = patchEmbedding(x)
-            // print("patchEmbeddings pre-flattened shape:")
-            // print(patchEmbeddings.shape)
             patchEmbeddings = patchEmbeddings.flattened(start: 1, end: 2)
             let positionIds = MLXArray(0 ..< numPositions)[.newAxis, 0...]
-            // print("positionIds:")
-            // print(positionIds.shape)
-            // print(positionIds)
-    
             let posEmbedding = positionEmbedding(positionIds)
-            // print("before concatting embeddings")
-            // print("patchEmbeddings shape:")
-            // print(patchEmbeddings.shape)
-            // print("posEmbedding shape:")
-            // print(posEmbedding.shape)
-            // print("")
-            // print("patchEmbeddings[0]")
-            // print(patchEmbeddings[0])
-            // print("posEmbedding[0]")
-            // print(posEmbedding[0])
             let embeddings = patchEmbeddings + posEmbedding
-            // print("after concatting embeddings")
-            print("embeddings = patchEmbeddings + posEmbedding:")
-            print(embeddings.shape)
             return embeddings
         }
     }
@@ -601,11 +568,10 @@ private enum Vision {
         @ModuleInfo(key: "embeddings") var embeddings: VisionEmbeddings
         @ModuleInfo(key: "encoder") var encoder: Encoder
         @ModuleInfo(key: "post_layernorm") var postLayernorm: LayerNorm
-        var config: Idefics3Configuration.VisionConfiguration
+        let config: Idefics3Configuration.VisionConfiguration
 
         init(_ config: Idefics3Configuration.VisionConfiguration) {
             self.config = config
-            // config.imageSize = 384
             self._embeddings.wrappedValue = VisionEmbeddings(config)
             self._encoder.wrappedValue = Encoder(config)
             self._postLayernorm.wrappedValue = LayerNorm(
@@ -656,7 +622,7 @@ public class Idefics3: Module, VLMModel, KVCacheDimensionProvider {
         key: "language_model"
     ) private var languageModel: Language.LanguageModel
     @ModuleInfo(key: "connector") private var connector: Idefics3Connector
-    public var config: Idefics3Configuration
+    public let config: Idefics3Configuration
 
     public var vocabularySize: Int { config.vocabSize }
     public var kvHeads: [Int] { languageModel.kvHeads }
@@ -710,7 +676,6 @@ public class Idefics3: Module, VLMModel, KVCacheDimensionProvider {
     private func prepareInputsForMultimodal(
         imageFeatures: MLXArray, inputs_embeds: MLXArray, inputIds: MLXArray
     ) -> MLXArray {
-        print("Idefics3, prepareInputsForMultimodal...")
         // Assumes bs == 1
         // inputIds shape: (1, seq_len)
         // asArray(Int.self) -> [[Int]], take [0] to get [Int]
@@ -836,37 +801,32 @@ public struct Idefics3ProcessorConfiguration: Codable, Sendable {
 // MARK: - Processor
 
 public class Idefics3Processor: UserInputProcessor {
-    private var config: Idefics3ProcessorConfiguration
+    private let config: Idefics3ProcessorConfiguration
     private let tokenizer: any Tokenizer
-    // private let fixedImageSize = 384
-    private let fixedImageSize = 512
+    private let fixedImageSize = 512  // 384
 
     // From the Python code and default config, we know image_token_id is usually 49153.
     // Hardcode this since we can't pass it in or rely on it from the processor config.
-    private let imageTokenId = 49190
+    private let imageTokenId = 49190  // 49153
 
     public init(
         _ config: Idefics3ProcessorConfiguration,
         tokenizer: any Tokenizer
     ) {
-        print("Idefics3Processor INIT")
         self.config = config
         self.tokenizer = tokenizer
     }
 
     public func prepare(input: UserInput) throws -> LMInput {
-        print("Idefics3Processor prepare...")
         let prompt = input.prompt.asMessages().last?["content"] as? String ?? ""
 
         if input.images.isEmpty {
-            print("Idefics3Processor NO IMAGE...")
             // No image scenario
             let tokens = try tokenizer.encode(text: prompt)
             let tokensArray = MLXArray(tokens).expandedDimensions(axis: 0)
             let mask = ones(like: tokensArray)
             return LMInput(text: .init(tokens: tokensArray, mask: mask), image: nil)
         } else {
-            print("Idefics3Processor SINGLE IMAGE...")
             // Single image scenario
             guard input.images.count == 1 else {
                 throw VLMError.singleImageAllowed
