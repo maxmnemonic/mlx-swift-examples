@@ -86,6 +86,7 @@ public class VLMTypeRegistry: ModelTypeRegistry, @unchecked Sendable {
             "qwen2_5_vl": create(Qwen25VLConfiguration.self, Qwen25VL.init),
             "idefics3": create(Idefics3Configuration.self, Idefics3.init),
             "smolvlm": create(SmolVLM2Configuration.self, SmolVLM2.init),
+            "smoldocling": create(SmolDoclingConfiguration.self, SmolDocling.init),
         ]
     }
 }
@@ -108,6 +109,10 @@ public class VLMProcessorTypeRegistry: ProcessorTypeRegistry, @unchecked Sendabl
                 Qwen25VLProcessorConfiguration.self, Qwen25VLProcessor.init),
             "Idefics3Processor": create(
                 Idefics3ProcessorConfiguration.self, Idefics3Processor.init),
+            // Note: key (SmolDoclingProcessor) defined in model's tokenizer_config.json
+            // See processor_class
+            "SmolDoclingProcessor": create(
+                SmolDoclingProcessorConfiguration.self, SmolDoclingProcessor.init),
             "SmolVLMProcessor": create(
                 SmolVLMProcessorConfiguration.self, SmolVLMProcessor.init),
         ]
@@ -151,6 +156,12 @@ public class VLMRegistry: AbstractModelRegistry, @unchecked Sendable {
             "What is the main action or notable event happening in this segment? Describe it in one brief sentence."
     )
 
+    static public let smoldocling = ModelConfiguration(
+        id: "ds4sd/SmolDocling-256M-preview-mlx-bf16",
+        defaultPrompt:
+            "Convert this page to docling."
+    )
+
     static public func all() -> [ModelConfiguration] {
         [
             paligemma3bMix448_8bit,
@@ -158,6 +169,7 @@ public class VLMRegistry: AbstractModelRegistry, @unchecked Sendable {
             qwen2_5VL3BInstruct4Bit,
             smolvlminstruct4bit,
             smolvlm,
+            smoldocling
         ]
     }
 

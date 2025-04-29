@@ -1,8 +1,9 @@
 //
-//  SmolVLM2.swift
+//  SmolDocling.swift
 //  mlx-swift-examples
 //
-//  Created by Pedro Cuenca on 20/3/25.
+//  Created by Maksym Lysak on 29/4/25, based on SmolVLM2.swift
+//  SmolVLM without video part
 //
 
 import CoreImage
@@ -14,12 +15,12 @@ import Tokenizers
 
 // MARK: - Configuration and modeling are Idefics3
 
-typealias SmolVLM2Configuration = Idefics3Configuration
-typealias SmolVLM2 = Idefics3
+typealias SmolDoclingConfiguration = Idefics3Configuration
+typealias SmolDocling = Idefics3
 
-// MARK: - SmolVLMProcessor and configuration
+// MARK: - SmolDoclingProcessor and configuration
 
-public struct SmolVLMProcessorConfiguration: Codable, Sendable {
+public struct SmolDoclingProcessorConfiguration: Codable, Sendable {
     public struct Size: Codable, Sendable {
         public let longestEdge: Int
         enum CodingKeys: String, CodingKey {
@@ -27,36 +28,22 @@ public struct SmolVLMProcessorConfiguration: Codable, Sendable {
         }
     }
 
-    public struct VideoSampling: Codable, Sendable {
-        public let fps: Int
-        public let maxFrames: Int
-        // Intentionally ignoring videoSize because I believe it's still wrong in the config files
-        //        public let videoSize: Size
-
-        enum CodingKeys: String, CodingKey {
-            case fps
-            case maxFrames = "max_frames"
-        }
-    }
-
     public let imageMean: [CGFloat]
     public let imageStd: [CGFloat]
     public let size: Size
     public let maxImageSize: Size
-    // public let videoSampling: VideoSampling
     private let _imageSequenceLength: Int?
     // TODO: this does not come in preprocessor_config.json, verify where transformers gets it from
     public var imageSequenceLength: Int { _imageSequenceLength ?? 64 }
 
     init(
         imageMean: [CGFloat], imageStd: [CGFloat], size: Size, maxImageSize: Size,
-        videoSampling: VideoSampling, imageSequenceLength: Int?
+        imageSequenceLength: Int?
     ) {
         self.imageMean = imageMean
         self.imageStd = imageStd
         self.size = size
         self.maxImageSize = maxImageSize
-        // self.videoSampling = videoSampling
         self._imageSequenceLength = imageSequenceLength
     }
 
@@ -72,13 +59,12 @@ public struct SmolVLMProcessorConfiguration: Codable, Sendable {
         case imageStd = "image_std"
         case size
         case maxImageSize = "max_image_size"
-        // case videoSampling = "video_sampling"
         case _imageSequenceLength = "image_seq_len"
     }
 }
 
-public class SmolVLMProcessor: UserInputProcessor {
-    private let config: SmolVLMProcessorConfiguration
+public class SmolDoclingProcessor: UserInputProcessor {
+    private let config: SmolDoclingProcessorConfiguration
     private let tokenizer: any Tokenizer
     // FIXME: hardcoded values for now
 
@@ -91,36 +77,13 @@ public class SmolVLMProcessor: UserInputProcessor {
     var maxProcessingImageSize: CGFloat { CGFloat(config.size.longestEdge) }  // 2048
     var fixedImageSize: CGFloat { CGFloat(config.maxImageSize.longestEdge) }  // 384 for big models, 512 for small models (200-500M)
     var imageSequenceLength: Int { config.imageSequenceLength }
-    var maxVideoFrames: Int { 20 /*config.videoSampling.maxFrames*/ }
-    var targetVideoFPS: Double { Double(24/*config.videoSampling.fps*/) }
-
-    let defaultVideoSystemMessage =
-        "You are a helpful assistant that can understand videos. Describe what type of video this is and what's happening in it."
 
     public init(
-        _ config: SmolVLMProcessorConfiguration,
+        _ config: SmolDoclingProcessorConfiguration,
         tokenizer: any Tokenizer
     ) {
         self.config = config
         self.tokenizer = tokenizer
-    }
-
-    func getVideoPromptString(
-        frameCount: Int, timeStamps: [String], videoDuration: String, seqLen: Int,
-        fakeToken: String, imageToken: String, globalImageToken: String
-    ) -> String {
-        var textSplitFrames =
-            "You are provided the following series of \(frameCount) frames from a \(videoDuration) [H:MM:SS] video.\n"
-        for frameIndex in 0 ..< frameCount {
-            textSplitFrames += "\nFrame from \(timeStamps[frameIndex]):"
-            textSplitFrames +=
-                (fakeToken
-                    + globalImageToken
-                    + String(repeating: imageToken, count: seqLen)
-                    + fakeToken)
-        }
-        textSplitFrames += "\n\n"
-        return textSplitFrames
     }
 
     func getImagePromptString(
@@ -128,7 +91,6 @@ public class SmolVLMProcessor: UserInputProcessor {
         globalImageToken: String
     ) -> String {
         /// Prompt with expanded image tokens for when the image is split into patches.
-        /// This applies to image processing, not video (I think).
         /// This just transliterates this: https://github.com/huggingface/transformers/blob/6a1ab634b6886b6560b0502e7a305c8cd881732e/src/transformers/models/idefics3/processing_idefics3.py#L44
         var textSplitImages = ""
         for h in 0 ..< rows {
@@ -178,7 +140,6 @@ public class SmolVLMProcessor: UserInputProcessor {
     }
 
     /// Tile image if it's larger than the maxProcessingImageSize, so the model gets to see more of it
-    /// TODO: disable in video mode
     func tiles(from originalImage: CIImage) -> (tiles: [CIImage], rows: Int, cols: Int) {
         // The original code resizes to maxProcessingImageSize, then resizes again ensuring multiples of fixedImageSize
         // We do both resizes in one go
@@ -222,13 +183,13 @@ public class SmolVLMProcessor: UserInputProcessor {
     public func prepare(input: UserInput) async throws -> LMInput {
         let messages = input.prompt.asMessages()
 
-        if input.images.isEmpty && input.videos.isEmpty {
+        if input.images.isEmpty {
             // No image scenario
             let promptTokens = try tokenizer.applyChatTemplate(messages: messages)
             let tokensArray = MLXArray(promptTokens).expandedDimensions(axis: 0)
             let mask = ones(like: tokensArray)
             return LMInput(text: .init(tokens: tokensArray, mask: mask), image: nil)
-        } else if input.images.count > 0 && input.videos.isEmpty {
+        } else if input.images.count > 0 {
             // Single image scenario
             guard input.images.count == 1 else {
                 throw VLMError.singleImageAllowed
@@ -276,80 +237,6 @@ public class SmolVLMProcessor: UserInputProcessor {
             return LMInput(
                 text: .init(tokens: promptArray, mask: mask),
                 image: .init(pixels: pixels)
-            )
-        } else {
-            // Single video scenario
-            guard input.images.count == 0 else {
-                throw VLMError.singleMediaTypeAllowed
-            }
-            guard input.videos.count == 1 else {
-                throw VLMError.singleVideoAllowed
-            }
-
-            // Insert a default system message if the input doesn't have one
-            func messagesWithSystem(_ messages: [Message]) -> [Message] {
-                guard messages.filter { $0["role"] as? String == "system" }.isEmpty else {
-                    return messages
-                }
-
-                var messagesWithSystem = messages
-                messagesWithSystem.insert(
-                    [
-                        "role": "system",
-                        "content": [["type": "text", "text": defaultVideoSystemMessage]],
-                    ], at: 0)
-                return messagesWithSystem
-            }
-
-            // Unfortunately we don't have a "render" option in Tokenizers yet, so decoding
-            let finalMessages = messagesWithSystem(messages)
-            let promptTokens = try tokenizer.applyChatTemplate(
-                messages: messagesWithSystem(messages))
-            let decoded = try tokenizer.decode(tokens: promptTokens, skipSpecialTokens: false)
-
-            var video = try input.videos[0].asAVAsset()
-
-            let processedFrames = await try MediaProcessing.asProcessedSequence(
-                video,
-                maxFrames: maxVideoFrames,
-                targetFPS: { duration in
-                    // 1 fps for duration >= 10s, apply a multiplier if smaller
-                    max((10 - 0.9 * duration.seconds) * targetVideoFPS, 1)
-                }
-            ) { frame in
-                let processedFrame = frame.frame
-                    .toSRGB()
-                    .resampled(
-                        to: CGSize(width: fixedImageSize, height: fixedImageSize), method: .lanczos
-                    )
-                    .normalized(mean: config.imageMeanTuple, std: config.imageStdTuple)
-                return VideoFrame(frame: processedFrame, timeStamp: frame.timeStamp)
-            }
-
-            let thwFrames = (0 ..< processedFrames.frames.count).map {
-                THW($0, Int(fixedImageSize), Int(fixedImageSize))
-            }
-
-            let stackedFrames = concatenated(processedFrames.frames, axis: 0)
-            let transposedFrames = stackedFrames.transposed(0, 2, 3, 1)
-
-            let videoPromptString = getVideoPromptString(
-                frameCount: processedFrames.frames.count,
-                timeStamps: processedFrames.timestamps.map(formatTimestamp),
-                videoDuration: formatTimestamp(processedFrames.totalDuration),
-                seqLen: imageSequenceLength,
-                fakeToken: fakeImageToken, imageToken: imageToken,
-                globalImageToken: globalImageToken)
-
-            let splitPrompt = decoded.split(by: "User: ", options: .literal)
-            let prompt = splitPrompt[0] + "User: " + videoPromptString + splitPrompt[1]
-            let finalPromptTokens = try tokenizer.encode(text: prompt)
-
-            let promptArray = MLXArray(finalPromptTokens).expandedDimensions(axis: 0)
-            let mask = ones(like: promptArray)
-            return LMInput(
-                text: .init(tokens: promptArray, mask: mask),
-                image: .init(pixels: transposedFrames, frames: thwFrames)
             )
         }
     }

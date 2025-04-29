@@ -803,11 +803,11 @@ public struct Idefics3ProcessorConfiguration: Codable, Sendable {
 public class Idefics3Processor: UserInputProcessor {
     private let config: Idefics3ProcessorConfiguration
     private let tokenizer: any Tokenizer
-    private let fixedImageSize = 384
+    private let fixedImageSize = 512  // 384
 
     // From the Python code and default config, we know image_token_id is usually 49153.
     // Hardcode this since we can't pass it in or rely on it from the processor config.
-    private let imageTokenId = 49153
+    private let imageTokenId = 49190  // 49153
 
     public init(
         _ config: Idefics3ProcessorConfiguration,
@@ -818,7 +818,6 @@ public class Idefics3Processor: UserInputProcessor {
     }
 
     public func prepare(input: UserInput) throws -> LMInput {
-
         let prompt = input.prompt.asMessages().last?["content"] as? String ?? ""
 
         if input.images.isEmpty {
