@@ -224,7 +224,11 @@ public class SmolVLMProcessor: UserInputProcessor {
 
     public func prepare(input: UserInput) async throws -> LMInput {
         print("Inside SmolVLM2 prepare...")
+        print("=============== input ==============")
+        print(input)
         let messages = input.prompt.asMessages()
+        print("=============== messages ==============")
+        print(messages)
 
         if input.images.isEmpty && input.videos.isEmpty {
             // No image scenario
